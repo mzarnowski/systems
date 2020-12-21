@@ -1,5 +1,5 @@
 package dev.mzarnowski
 
-interface Disposable {
+fun interface Disposable {
     fun dispose()
 }

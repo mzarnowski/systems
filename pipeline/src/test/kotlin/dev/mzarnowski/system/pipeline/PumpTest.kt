@@ -8,38 +8,44 @@ class PumpTest {
     @Test
     fun recalculates_availability_after_releases_from_both_ends() {
         val scheduler = Executors.newSingleThreadScheduledExecutor()
-        val pump = Pump<Int>(scheduler) { { Task.Break } }
+        val pipeline = Pipeline(scheduler, 32, 8)
+        val pipe = object : Buffer<Int>(pipeline) {
+            override fun iterate(): Result = Break
+        }
 
-        val writer = pump.writer
-
-        val reader = Pump.Downstream(pump)
+        val reader = Reader(pipe)
         val task = Task(scheduler) { Task.Break }
-        pump.add(reader, task)
+        pipe.register(reader, task)
 
-        writer.release(writer.claim())
+        pipe.release(pipe.claim())
 
         assertThat(reader.at).isEqualTo(0)
-        assertThat(reader.claim()).isEqualTo(pump.size)
-        assertThat(writer.at).isEqualTo(pump.size)
-        assertThat(writer.claim()).isEqualTo(0)
+        assertThat(reader.claim()).isEqualTo(32)
+        assertThat(pipe.at).isEqualTo(32)
+        assertThat(pipe.claim()).isEqualTo(0)
 
         reader.release(20)
 
-        assertThat(writer.claim()).isEqualTo(20)
+        assertThat(pipe.claim()).isEqualTo(20)
         assertThat(reader.claim()).isEqualTo(12)
     }
 
     @Test
     fun read_all_values() {
-        val scheduler = Executors.newSingleThreadScheduledExecutor()
-        val values = IterableSource(1..1000000)
-        val pump = Pump(scheduler, values)
+        val scheduler = Executors.newSingleThreadScheduledExecutor { Thread(it, "foo")}
+        val pipeline = Pipeline(scheduler, 32, 20)
+        val pump = pipeline.stream(1..1000)
 
         val actual = mutableListOf<Int>()
-        pump.forEach(actual::add)
-        while (!pump.disposed.get()) continue
-        scheduler.shutdownNow()
-        assertThat(actual).containsExactlyElementsOf(1..1000000)
+        pump.forEach {
+            if (it % 1000 == 0) println(it)
+            actual.add(it)
+        }
+        while (!pump.isDisposed) continue
+        pipeline.dispose()
+
+        assertThat(actual.first()).isEqualTo(1)
+        assertThat(actual.last()).isEqualTo(1000)
     }
 }
 
