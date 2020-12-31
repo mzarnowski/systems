@@ -1,13 +1,10 @@
 package dev.mzarnowski.system.pipeline;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public final class Reader<A> implements Rationed {
     volatile int at = 0;
     volatile int available = 0;
     private final Buffer<A> buffer;
     private final Ring<A> ring;
-    private final AtomicBoolean isDisposed = new AtomicBoolean(false);
 
     Reader(Buffer<A> buffer) {
         this.buffer = buffer;
@@ -44,14 +41,5 @@ public final class Reader<A> implements Rationed {
 
     public A get(int offset) {
         return ring.get(at + offset);
-    }
-
-    public boolean isDisposed() {
-        return isDisposed.get();
-    }
-
-    public void dispose() {
-        isDisposed.set(true);
-        // TODO nothing more? Maybe stop the pump?
     }
 }

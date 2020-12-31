@@ -1,5 +1,7 @@
 package dev.mzarnowski.system.pipeline;
 
-public interface Writer<A> extends Rationed {
+import dev.mzarnowski.Disposable;
+
+public interface Writer<A> extends Disposable, Rationed {
     void set(int offset, A value);
 }

@@ -58,7 +58,7 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
     @Override
     protected final void register(Reader<A> reader, Task task, boolean start) {
         if (isDisposed()) {
-            reader.dispose();
+            task.dispose();
             return;
         }
 
@@ -72,7 +72,6 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
         }
 
         if (isDisposed()) {
-            reader.dispose();
             task.dispose();
         } else if (start) {
             task.invoke();
@@ -83,9 +82,6 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
     public final void dispose() {
         if (isDisposed.compareAndSet(false, true)) {
             super.dispose();
-
-            for (Reader<A> reader : downstream.keySet()) reader.dispose();
-            downstream.clear();
         }
     }
 
