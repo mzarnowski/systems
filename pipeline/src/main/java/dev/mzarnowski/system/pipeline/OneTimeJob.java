@@ -2,10 +2,11 @@ package dev.mzarnowski.system.pipeline;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 final class OneTimeJob implements Runnable {
     private final List<Runnable> tasks = new ArrayList<>();
-    private volatile boolean isDisposed;
+    private final AtomicBoolean isStarted = new AtomicBoolean(false);
 
     OneTimeJob(Runnable... tasks) {
         for (Runnable task : tasks) add(task);
@@ -15,12 +16,17 @@ final class OneTimeJob implements Runnable {
         task = new RunOnce(task);
 
         tasks.add(task);
-        if (isDisposed) task.run();
+        if (isStarted.get()) task.run();
     }
 
     @Override
     public void run() {
-        isDisposed = true;
-        tasks.forEach(Runnable::run);
+        if (isStarted.compareAndSet(false, true)) {
+            tasks.forEach(Runnable::run);
+        }
+    }
+
+    public boolean wasStarted() {
+        return isStarted.get();
     }
 }

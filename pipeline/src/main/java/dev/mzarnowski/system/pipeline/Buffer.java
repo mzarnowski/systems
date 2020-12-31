@@ -2,14 +2,12 @@ package dev.mzarnowski.system.pipeline;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class Buffer<A> extends Pump<A> implements Writer<A> {
     volatile int at = 0;
     volatile int available = 0;
 
     final Ring<A> ring = Ring.of(owner.bufferSize);
-    private final AtomicBoolean isDisposed = new AtomicBoolean(false);
     private final Map<Reader<A>, Task> downstream = new HashMap<>();
 
     Buffer(Pipeline owner) {
@@ -73,17 +71,6 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
 
         if (isDisposed()) task.dispose();
         else if (start) task.invoke();
-    }
-
-    @Override
-    public final void dispose() {
-        if (isDisposed.compareAndSet(false, true)) {
-            super.dispose();
-        }
-    }
-
-    protected final boolean isDisposed() {
-        return isDisposed.get();
     }
 
     @Override

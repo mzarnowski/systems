@@ -22,8 +22,12 @@ abstract class Pump<A> extends Task implements Pipe<A> {
     }
 
     @Override
-    public void dispose() {
+    public final void dispose() {
         onComplete.run();
+    }
+
+    protected final boolean isDisposed() {
+        return onComplete.wasStarted();
     }
 
     @Override
