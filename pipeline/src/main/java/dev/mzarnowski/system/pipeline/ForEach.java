@@ -31,7 +31,7 @@ final class ForEach<A> extends Sink {
     @NotNull
     protected Result iterate() {
         var available = reader.claim(1, owner.batchSize);
-        if (available == 0 && reader.isDisposed()) return Break.INSTANCE;
+        if (available < 0) return Break.INSTANCE;
 
         reader.request(); // TODO create observer class, which is not requesting eagerly
         for (int i = 0; i < available; i++) {
@@ -40,6 +40,6 @@ final class ForEach<A> extends Sink {
         }
 
         reader.release(available);
-        return Continue.INSTANCE;
+        return Wait.INSTANCE;
     }
 }

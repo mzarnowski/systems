@@ -9,6 +9,4 @@ interface Rationed extends Disposable {
 
     void request();
     void release(int amount);
-
-    boolean isDisposed();
 }

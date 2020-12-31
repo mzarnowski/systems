@@ -14,9 +14,9 @@ final class FromIterable<A> extends Buffer<A> {
 
     @NotNull
     protected Result iterate() {
+        if (isDisposed()) return Break.INSTANCE;
+
         var available = claim(1, owner.batchSize);
-        if (available == 0 && isDisposed()) return Break.INSTANCE;
-        // TODO writer.request(); ?
 
         var offset = 0;
         while (iterator.hasNext() && offset < available) {

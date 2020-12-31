@@ -1,8 +1,6 @@
 package dev.mzarnowski.system.pipeline;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -49,6 +47,8 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
     public final void release(int amount) {
         available -= amount;
         at += amount;
+        // TODO is it a good idea to always propagate here?
+        request();
     }
 
     public final void request() {
@@ -86,8 +86,7 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
         }
     }
 
-    @Override
-    public final boolean isDisposed() {
+    protected final boolean isDisposed() {
         return isDisposed.get();
     }
 

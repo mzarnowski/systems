@@ -4,6 +4,4 @@ import java.util.function.Consumer;
 
 public interface Pipe<A> extends Component {
     Component forEach(Consumer<A> f);
-
-    boolean isDisposed();
 }
