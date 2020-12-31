@@ -47,7 +47,9 @@ class TaskTest {
         increment = Task(scheduler, scheduler.disposable()) {
             if (adder.sum() == 0L) repeat(5) { increment!!.invoke() } //schedule another increment during execution
             adder.increment()
-            Task.Continue
+
+            if (adder.sum() > 1L) Task.Break
+            else Task.Continue
         }
 
         increment()
@@ -104,7 +106,6 @@ class TaskTest {
         scheduler.terminateOrFail { adder.sum() >= 2 }
         Assertions.assertThat(timestamps[1] - timestamps[0])
             .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(300))
-
     }
 }
 

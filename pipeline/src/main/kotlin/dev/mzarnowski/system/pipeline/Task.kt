@@ -21,7 +21,7 @@ abstract class Task(private val scheduler: Scheduler) : Disposable {
 
         when (val result = iterate()) {
             Break -> dispose()
-            Continue -> requests.addAndGet(-batch).also { invoke() }
+            Continue -> requests.addAndGet(-batch).also { if(it == 0) invoke() else scheduler.execute(this::run)}
             is Delay -> scheduler.schedule(this::run, result.by, result.unit)
             Wait -> requests.addAndGet(-batch).also { if (it > 0) scheduler.execute(this::run) }
         }
