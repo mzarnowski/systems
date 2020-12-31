@@ -3,7 +3,7 @@ package dev.mzarnowski.system.pipeline;
 import java.util.concurrent.ScheduledExecutorService;
 
 public abstract class Sink extends Task implements Component {
-    private final Callback onComplete = new Callback(super::dispose);
+    private final OneTimeJob onComplete = new OneTimeJob(super::dispose);
 
     public Sink(ScheduledExecutorService scheduler) {
         super(scheduler);
