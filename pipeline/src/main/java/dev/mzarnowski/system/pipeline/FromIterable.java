@@ -17,6 +17,10 @@ final class FromIterable<A> extends Buffer<A> {
         if (isDisposed()) return Break.INSTANCE;
 
         var available = claim(1, owner.batchSize);
+        if(available == 0){
+            request();
+            return Wait.INSTANCE;
+        }
 
         var offset = 0;
         while (iterator.hasNext() && offset < available) {
@@ -25,6 +29,8 @@ final class FromIterable<A> extends Buffer<A> {
         }
 
         release(offset);
-        return iterator.hasNext() ? Continue.INSTANCE : Break.INSTANCE;
+        return iterator.hasNext()
+                ? Continue.INSTANCE
+                : Break.INSTANCE;
     }
 }
