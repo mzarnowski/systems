@@ -7,6 +7,5 @@ interface Rationed extends Disposable {
     int claim(int atLeast);
     int claim(int atLeast, int atMost);
 
-    void request();
     void release(int amount);
 }

@@ -15,7 +15,7 @@ class PumpTest {
 
         val reader = Reader(pipe)
         val task = Task(scheduler) { Task.Break }
-        pipe.register(reader, task)
+        pipe.register(reader, task, false)
 
         pipe.release(pipe.claim())
 

@@ -27,8 +27,6 @@ public final class Reader<A> implements Rationed {
             available = buffer.at - this.at;
         }
 
-        if (available == 0) return isDisposed() ? -1 : 0;
-        if (available < atLeast) return isDisposed() ? available : 0;
         return Math.min(available, atMost);
     }
 
@@ -37,8 +35,11 @@ public final class Reader<A> implements Rationed {
         at += amount;
     }
 
-    public void request() {
+    public boolean request() {
+        if (buffer.isDisposed())
+            return false;
         buffer.invoke();
+        return true;
     }
 
     public A get(int offset) {

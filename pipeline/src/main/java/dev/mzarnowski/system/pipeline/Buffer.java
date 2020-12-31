@@ -56,7 +56,7 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
     }
 
     @Override
-    final void register(Reader<A> reader, Task task) {
+    protected final void register(Reader<A> reader, Task task, boolean start) {
         if (isDisposed()) {
             reader.dispose();
             return;
@@ -64,6 +64,7 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
 
         downstream.put(reader, task);
 
+        // TODO this might need a temporary, guard Reader (always sitting at an arbitrary position)
         while (!isDisposed()) {
             var position = at + available;
             if (reader.at == position) break;
@@ -73,6 +74,8 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
         if (isDisposed()) {
             reader.dispose();
             task.dispose();
+        } else if (start) {
+            task.invoke();
         }
     }
 

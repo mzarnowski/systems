@@ -12,13 +12,11 @@ final class ForEach<A> extends Sink {
 
     private final AtomicBoolean isDisposed = new AtomicBoolean(false);
 
-
     public ForEach(Pipeline owner, Reader<A> reader, Consumer<A> consumer) {
         super(owner.scheduler);
         this.owner = owner;
         this.reader = reader;
         this.consumer = consumer;
-        invoke();
     }
 
     @Override
@@ -30,16 +28,18 @@ final class ForEach<A> extends Sink {
 
     @NotNull
     protected Result iterate() {
-        var available = reader.claim(1, owner.batchSize);
-        if (available < 0) return Break.INSTANCE;
+        // TODO create observer class, which is not requesting eagerly and is disposed automatically
+        var requested = reader.request();
 
-        reader.request(); // TODO create observer class, which is not requesting eagerly
+        var available = reader.claim(1, owner.batchSize);
         for (int i = 0; i < available; i++) {
             var next = reader.get(i);
             consumer.accept(next);
         }
 
         reader.release(available);
-        return Wait.INSTANCE;
+        if (requested) return Wait.INSTANCE;
+        if (available == 0) return Break.INSTANCE;
+        return Continue.INSTANCE;
     }
 }

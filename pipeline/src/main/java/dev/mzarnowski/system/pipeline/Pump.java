@@ -12,12 +12,12 @@ abstract class Pump<A> extends Task implements Pipe<A> {
     }
 
     abstract Reader<A> reader();
-    abstract void register(Reader<A> reader, Task task);
+    protected abstract void register(Reader<A> reader, Task task, boolean start);
 
     public final Component forEach(Consumer<A> f) {
         var reader = reader();
         var task = new ForEach<>(owner, reader, f);
-        register(reader, task);
+        register(reader, task, true);
         return task;
     }
 
