@@ -5,12 +5,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 abstract class Buffer<A> extends Pump<A> implements Writer<A> {
+    volatile int at = 0;
+    volatile int available = 0;
+
     final Ring<A> ring = Ring.of(owner.bufferSize);
     private final AtomicBoolean isDisposed = new AtomicBoolean(false);
     private final Map<Reader<A>, Task> downstream = new HashMap<>();
-
-    volatile int at = 0;
-    volatile int available = 0;
 
     Buffer(Pipeline owner) {
         super(owner);

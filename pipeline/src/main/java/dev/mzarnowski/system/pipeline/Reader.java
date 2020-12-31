@@ -3,6 +3,7 @@ package dev.mzarnowski.system.pipeline;
 public final class Reader<A> implements Rationed {
     volatile int at = 0;
     volatile int available = 0;
+
     private final Buffer<A> buffer;
     private final Ring<A> ring;
 
