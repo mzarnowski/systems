@@ -2,12 +2,16 @@ package dev.mzarnowski.system.pipeline;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-final class ForEach<A> extends Task {
+final class ForEach<A> extends Sink {
     private final Pipeline owner;
     private final Reader<A> reader;
     private final Consumer<A> consumer;
+
+    private final AtomicBoolean isDisposed = new AtomicBoolean(false);
+
 
     public ForEach(Pipeline owner, Reader<A> reader, Consumer<A> consumer) {
         super(owner.scheduler);
@@ -15,6 +19,13 @@ final class ForEach<A> extends Task {
         this.reader = reader;
         this.consumer = consumer;
         invoke();
+    }
+
+    @Override
+    public void dispose() {
+        if (isDisposed.compareAndSet(false, true)) {
+            super.dispose();
+        }
     }
 
     @NotNull
