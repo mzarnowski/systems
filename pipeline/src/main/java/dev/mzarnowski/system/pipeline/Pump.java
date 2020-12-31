@@ -4,7 +4,7 @@ import java.util.function.Consumer;
 
 abstract class Pump<A> extends Task implements Pipe<A> {
     protected final Pipeline owner;
-    private final Callback onComplete = new Callback();
+    private final Callback onComplete = new Callback(super::dispose);
 
     Pump(Pipeline owner) {
         super(owner.scheduler);
@@ -23,7 +23,6 @@ abstract class Pump<A> extends Task implements Pipe<A> {
 
     @Override
     public void dispose() {
-        super.dispose();
         onComplete.run();
     }
 
