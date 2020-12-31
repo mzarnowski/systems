@@ -7,6 +7,7 @@ public abstract class Sink extends Task implements Component {
 
     public Sink(ScheduledExecutorService scheduler) {
         super(scheduler);
+        onComplete.add(super::dispose);
     }
 
     @Override
@@ -16,8 +17,7 @@ public abstract class Sink extends Task implements Component {
     }
 
     @Override
-    public void dispose() {
-        super.dispose();
+    public final void dispose() {
         onComplete.run();
     }
 }
