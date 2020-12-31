@@ -12,6 +12,10 @@ public final class Reader<A> implements Rationed {
         this.ring = buffer.ring;
     }
 
+    public A get(int offset) {
+        return ring.get(at + offset);
+    }
+
     public int claim() {
         return claim(1, Integer.MAX_VALUE);
     }
@@ -38,9 +42,5 @@ public final class Reader<A> implements Rationed {
             return false;
         buffer.invoke();
         return true;
-    }
-
-    public A get(int offset) {
-        return ring.get(at + offset);
     }
 }

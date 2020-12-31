@@ -71,11 +71,8 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
             reader.at = position;
         }
 
-        if (isDisposed()) {
-            task.dispose();
-        } else if (start) {
-            task.invoke();
-        }
+        if (isDisposed()) task.dispose();
+        else if (start) task.invoke();
     }
 
     @Override
