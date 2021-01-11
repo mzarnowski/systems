@@ -1,0 +1,26 @@
+abstract class Pump(Runnable task, Runnable onComplete, Runnable onDispose) {
+    /**
+     *  Schedules the [[task]] to be run sometime in the future,
+     *  unless the pump is either disposed or completing its work.
+     *  Only one task can run at the time. If the pump currently running,
+     *  it automatically schedule another iteration once finished
+     *  unless disposed or during completion phase;
+     */
+    void schedule();
+
+    /**
+     *  Initiates the completion phase by scheduling
+     *  the [[onComplete]] task until the pump gets disposed.
+     */
+    void complete(); // cannot be the same as schedule, since the internal state transition is different
+
+    /**
+     *  Prevents scheduling any tasks. Currently running task will be finished without interruption.
+     *  The passed task will be called as soon as the current batch is finished
+     *  (or immediately, if none is currently running). Subsequent calls will be ignored.
+     */
+    void dispose(); // allows on demand termination
+}
+
+Although the actual tasks cannot be passed as arguments (since this would
+require additional logic of queueing them)

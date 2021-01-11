@@ -1,0 +1,21 @@
+To move the data between system components as well as across system boundary, we can use a single interface:
+
+abstract class Move<From, To>{
+    protected final From upstream;
+    protected final To downstream;
+
+    abstract void move(int amount);
+}
+
+The type parameters are not bounded to allow expressing external types (collections, sockets, etc.)
+for the purpose of across-boundary communication. This allows unified way of moving data between components.
+
+
+
+####################################
+Should move extend claimable? At least one subclass might (for adapters and sinks).
+For it, the protocol would be as follow:
+1. claim available data (from Upstream)
+2. move claimed data
+
+For unclaimable version, the amount of data to move would come from "outside" (in relation to Upstream).

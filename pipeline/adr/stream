@@ -1,0 +1,52 @@
+upstream can be notified of the downstream demand
+downstream can be notified of the available items
+
+should those notification contain the amount of items to fetch?
+we can already know the amount by claiming exactly how much we want.
+
+####################################
+
+When should the downstream be notified?
+a) every time the data is buffered: may need adjusting batch size for performance
+b) on demand, propagated from source: would cause complex logic for
+    (re)scheduling sources, might cause deadlocks if handled poorly,
+    requires users to be aware of the inner-workings, but gives them more control.
+
+Since it is more complex, b) should probably be added later (if at all) as an alternative
+    for creating sources
+
+The interfaces seem to be as follow.
+
+interface Upstream<R extends Reader<?>> {
+    void request();
+    R reader();
+}
+
+interface Downstream<W extends Writer<?>> {
+    void onAvailable();
+    W writer();
+}
+
+by not extending neither Reader nor Writer, we can keep those two relatively simple and similar.
+As a result, the adapter becomes:
+
+interface Adapter<R extends Reader<?>, W extends Writer<?>> extends Upstream<R>, Downstream<W>
+
+########################################
+Alternatively:
+    int claim(int amount) must be a part of separate interface:
+
+interface Claimable {
+    int claim(int amount);
+}
+
+although the name sucks a lot, it must be somewhere.
+
+We need to separate the read/write methods from the upstream/downstream interfaces
+since those are valid only for the internal buffers
+
+########################################
+Claimable -> Buffered.
+WRONG:
+  1. Downstream/Upstream must not extend this directly, only readers/writers must.
+  2. in doesn't sound that good when describing readers/writers

@@ -1,0 +1,5 @@
+There is no need for a separate Writer class.
+It's easier to make Buffer implement Downstream interface, since any buffer
+must be populated at least once. If at any point we need multiple writers,
+it is as simple as creating a wrapper for buffer supporting N Downstream, providing
+a synchronization between them out of the box.
