@@ -38,6 +38,22 @@ class PumpTest {
     }
 
     @Test
+    fun filter_odd_values() {
+        val scheduler = Scheduler(singleThreaded(), 1)
+        val predicate = { i: Int -> i and 1 == 0 }
+        val pipeline = Pipeline(scheduler, 32, 20)
+        val pump = pipeline.stream(1..1000).filter(predicate)
+
+        val actual = mutableListOf<Int>()
+        pump.forEach(actual::add).onComplete(scheduler::countDown)
+
+        scheduler.onceCompleted {
+            assertThat(actual.size).isEqualTo(1000 / 2)
+            assertThat(actual.filterNot(predicate)).isEmpty()
+        }
+    }
+
+    @Test
     fun transfer_data_through_long_chain() {
         val scheduler = Scheduler(singleThreaded(), 1)
         val length = 100

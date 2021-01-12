@@ -3,7 +3,7 @@ package dev.mzarnowski.system.pipeline;
 import java.util.function.Function;
 
 final class AdaptUsingFunction<A, B> extends Adapter<A, B> {
-    private Function<A, B> f;
+    private final Function<A, B> f;
 
     AdaptUsingFunction(Pipeline owner, Reader<A> upstream, Function<A, B> f) {
         super(owner, upstream);

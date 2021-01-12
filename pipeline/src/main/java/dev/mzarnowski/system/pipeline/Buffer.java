@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 // cannot implement downstream, as sources are buffers but are not "downstream"
 abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
@@ -26,6 +27,11 @@ abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
     @Override
     public final <B> Pipe<B> map(Function<A, B> f) {
         return register(false, (reader) -> new AdaptUsingFunction<>(owner, reader, f));
+    }
+
+    @Override
+    public Pipe<A> filter(Predicate<A> p) {
+        return register(false, (reader) -> new AdaptUsingPredicate<>(owner, reader, p));
     }
 
     public final void write(int offset, A value) {
