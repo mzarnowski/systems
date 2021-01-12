@@ -26,7 +26,7 @@ class PumpTest {
         val scheduler = Scheduler(singleThreaded(), 1)
 
         val pipeline = Pipeline(scheduler, 32, 20)
-        val pump = pipeline.stream(1..1000).map {it + 3}
+        val pump = pipeline.stream(1..1000).map { it + 3 }
 
         val actual = mutableListOf<Int>()
         pump.forEach(actual::add).onComplete(scheduler::countDown)
@@ -34,6 +34,26 @@ class PumpTest {
         scheduler.onceCompleted {
             assertThat(actual.first()).isEqualTo(1 + 3)
             assertThat(actual.last()).isEqualTo(1000 + 3)
+        }
+    }
+
+    @Test
+    fun transfer_data_through_long_chain() {
+        val scheduler = Scheduler(singleThreaded(), 1)
+        val length = 100
+
+        val pipeline = Pipeline(scheduler, 32, 7)
+        var pump = pipeline.stream(1..1000)
+        repeat(length) {
+            pump = pump.map { it + 1 }
+        }
+
+        val actual = mutableListOf<Int>()
+        pump.forEach(actual::add).onComplete(scheduler::countDown)
+
+        scheduler.onceCompleted {
+            assertThat(actual.first()).isEqualTo(1 + length)
+            assertThat(actual.last()).isEqualTo(1000 + length)
         }
     }
 
