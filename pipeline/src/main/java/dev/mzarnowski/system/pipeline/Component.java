@@ -1,7 +1,16 @@
 package dev.mzarnowski.system.pipeline;
 
-import dev.mzarnowski.Disposable;
+abstract class Component {
+    protected final Pipeline owner;
+    protected final OneTimeJob onComplete = new OneTimeJob();
 
-interface Component extends Disposable {
-    Component onComplete(Runnable runnable);
+    protected Component(Pipeline owner) {
+        this.owner = owner;
+    }
+
+    public abstract Component onComplete(Runnable task);
+
+    protected final boolean isDisposed() {
+        return onComplete.wasStarted();
+    }
 }

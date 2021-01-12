@@ -50,3 +50,7 @@ Claimable -> Buffered.
 WRONG:
   1. Downstream/Upstream must not extend this directly, only readers/writers must.
   2. in doesn't sound that good when describing readers/writers
+
+########################################
+Downstream needs a way to be notified that the upstream is completed,
+and it can start draining it

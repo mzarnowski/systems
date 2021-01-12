@@ -1,31 +1,38 @@
 package dev.mzarnowski.system.pipeline;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
-abstract class Buffer<A> extends Pump<A> implements Writer<A> {
+// cannot implement downstream, as sources are buffers but are not "downstream"
+abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
     volatile int at = 0;
     volatile int available = 0;
 
-    final Ring<A> ring = Ring.of(owner.bufferSize);
-    private final Map<Reader<A>, Task> downstream = new HashMap<>();
+    final Ring<A> ring;
+    final Map<Reader<A>, Downstream> downstream = new ConcurrentHashMap<>();
 
     Buffer(Pipeline owner) {
         super(owner);
+        this.ring = Ring.of(owner.bufferSize);
+        onComplete.add(() -> downstream.values().forEach(Downstream::onComplete));
     }
 
-    public final void set(int offset, A value) {
+    public final Sink forEach(Consumer<A> consumer) {
+        return register(true, (reader) -> new SinkToConsumer<>(owner, reader, consumer));
+    }
+
+    @Override
+    public final <B> Pipe<B> map(Function<A, B> f) {
+        return register(false, (reader) -> new AdaptUsingFunction<>(owner, reader, f));
+    }
+
+    public final void write(int offset, A value) {
         ring.set(at + offset, value);
     }
 
-    public final int claim() {
-        return claim(1, Integer.MAX_VALUE);
-    }
-
-    public final int claim(int atLeast) {
-        return claim(atLeast, Integer.MAX_VALUE);
-    }
-
+    @Override
     public final int claim(int atLeast, int atMost) {
         if (available < atLeast) {
             if (downstream.isEmpty()) return available;
@@ -38,29 +45,25 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
             available = acc;
         }
 
-        if (available < atLeast) return 0;
-        return Math.min(available, atMost);
+        return available < atLeast ? 0 : Math.min(available, atMost);
     }
 
     public final void release(int amount) {
         available -= amount;
         at += amount;
-        // TODO is it a good idea to always propagate here?
-        request();
+        downstream.values().forEach(Downstream::onAvailable);
     }
 
-    public final void request() {
-        for (var pump : downstream.values()) pump.invoke();
-    }
+    final <P extends Pump & Downstream> P register(boolean start, Function<Reader<A>, P> f) {
+        var reader = new Reader<>(this);
+        var pump = f.apply(reader);
 
-    @Override
-    protected final void register(Reader<A> reader, Task task, boolean start) {
         if (isDisposed()) {
-            task.dispose();
-            return;
+            pump.dispose();
+            return pump;
         }
 
-        downstream.put(reader, task);
+        downstream.put(reader, pump);
 
         // TODO this might need a temporary, guard Reader (always sitting at an arbitrary position)
         while (!isDisposed()) {
@@ -69,13 +72,14 @@ abstract class Buffer<A> extends Pump<A> implements Writer<A> {
             reader.at = position;
         }
 
-        if (isDisposed()) task.dispose();
-        else if (start) task.invoke();
+        if (isDisposed()) pump.dispose();
+        else if (reader.claim(1, 1) > 0) pump.schedule();
+        else if (start) pump.schedule();
+
+        return pump;
     }
 
-    @Override
-    Reader<A> reader() {
-        return new Reader<>(this);
+    final void unsubscribe(Reader<A> reader) {
+        downstream.remove(reader);
     }
 }
-

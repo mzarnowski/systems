@@ -1,39 +1,56 @@
 package dev.mzarnowski.system.pipeline;
 
-import java.util.function.Consumer;
+import dev.mzarnowski.Disposable;
 
-abstract class Pump<A> extends Task implements Pipe<A> {
-    protected final Pipeline owner;
-    private final OneTimeJob onComplete = new OneTimeJob(super::dispose);
+import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+
+abstract class Pump extends Component implements Disposable {
+    private static final int IDLE = 0;
+    private static final int RUNNING = 1;
+    private static final int QUEUED = 2;
+    private static final int COMPLETED = 3;
+
+    protected final Executor executor;
+    protected final int batchSize;
+    private final Runnable initialTask = this::pump;
+    private final AtomicInteger state = new AtomicInteger(IDLE);
+    private final AtomicReference<Runnable> task = new AtomicReference<>(initialTask);
 
     Pump(Pipeline owner) {
-        super(owner.scheduler);
-        this.owner = owner;
+        super(owner);
+        this.executor = owner.scheduler;
+        this.batchSize = owner.batchSize;
+        onComplete(() -> state.set(COMPLETED));
     }
 
-    abstract Reader<A> reader();
-    protected abstract void register(Reader<A> reader, Task task, boolean start);
+    protected abstract void pump();
+    protected abstract void drain();
 
-    public final Component forEach(Consumer<A> f) {
-        var reader = reader();
-        var task = new ForEach<>(owner, reader, f);
-        register(reader, task, true);
-        return task;
+    final void schedule() {
+        if (IDLE == state.getAndUpdate(it -> it < QUEUED ? it + 1 : it)) {
+            executor.execute(this::iterate);
+        }
+    }
+
+    final void complete() {
+        if (task.compareAndSet(initialTask, this::drain)) {
+            schedule();
+        }
     }
 
     @Override
     public final void dispose() {
-        onComplete.run();
+        if (onComplete != task.getAndSet(onComplete)) {
+            schedule();
+        }
     }
 
-    protected final boolean isDisposed() {
-        return onComplete.wasStarted();
-    }
+    private void iterate() {
+        task.get().run();
 
-    @Override
-    public Pipe<A> onComplete(Runnable runnable) {
-        onComplete.add(runnable);
-        return this;
+        var is = state.updateAndGet(it -> it == COMPLETED ? COMPLETED : it - 1);
+        if (is == RUNNING) executor.execute(this::iterate);
     }
 }
-

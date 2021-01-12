@@ -1,22 +1,42 @@
 package dev.mzarnowski.system.pipeline;
 
-import java.util.concurrent.ScheduledExecutorService;
+import dev.mzarnowski.Disposable;
 
-public abstract class Sink extends Task implements Component {
-    private final OneTimeJob onComplete = new OneTimeJob(super::dispose);
+abstract class Sink extends Pump implements Disposable, Downstream {
+    protected final Reader<?> upstream;
 
-    public Sink(ScheduledExecutorService scheduler) {
-        super(scheduler);
+    <A> Sink(Pipeline owner, Reader<A> upstream) {
+        super(owner);
+        this.upstream = upstream;
+        onComplete(upstream::dispose);
+    }
+
+    protected abstract void move(int amount);
+
+    @Override
+    public void onAvailable() {
+        schedule();
     }
 
     @Override
-    public Component onComplete(Runnable runnable) {
-        onComplete.add(runnable);
+    public void onComplete() {
+        complete();
+    }
+
+    @Override
+    public Sink onComplete(Runnable task) {
+        onComplete.add(task);
         return this;
     }
 
-    @Override
-    public final void dispose() {
-        onComplete.run();
+    protected void pump() {
+        var available = upstream.claim(1, batchSize);
+        move(available);
+    }
+
+    protected void drain() {
+        var available = upstream.claim(1, batchSize);
+        if (available == 0) dispose();
+        else move(available);
     }
 }

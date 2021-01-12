@@ -16,7 +16,7 @@ public final class Pipeline implements Disposable {
     }
 
     public <A> Pipe<A> stream(Iterable<A> iterable) {
-        return new FromIterable<>(this, iterable);
+        return new SourceFromIterable<>(this, iterable);
     }
 
     @Override

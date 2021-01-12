@@ -1,9 +1,10 @@
 package dev.mzarnowski.system.pipeline;
 
-public final class Reader<A> implements Rationed {
+import dev.mzarnowski.Disposable;
+
+final class Reader<A> implements Claimable, Disposable, Upstream.Of<A> {
     volatile int at = 0;
     volatile int available = 0;
-
     private final Buffer<A> buffer;
     private final Ring<A> ring;
 
@@ -12,35 +13,33 @@ public final class Reader<A> implements Rationed {
         this.ring = buffer.ring;
     }
 
-    public A get(int offset) {
-        return ring.get(at + offset);
+    @Override
+    public void dispose() {
+        buffer.unsubscribe(this);
     }
 
-    public int claim() {
-        return claim(1, Integer.MAX_VALUE);
+    @Override
+    public void request() {
+        buffer.request();
     }
 
-    public int claim(int atLeast) {
-        return claim(atLeast, Integer.MAX_VALUE);
-    }
-
+    @Override
     public int claim(int atLeast, int atMost) {
         if (available < atLeast) {
             available = buffer.at - this.at;
         }
 
-        return Math.min(available, atMost);
+        return available < atLeast ? 0 : Math.min(available, atMost);
     }
 
+    @Override
     public void release(int amount) {
         available -= amount;
         at += amount;
     }
 
-    public boolean request() {
-        if (buffer.isDisposed())
-            return false;
-        buffer.invoke();
-        return true;
+    @Override
+    public A read(int offset) {
+        return ring.get(at + offset);
     }
 }

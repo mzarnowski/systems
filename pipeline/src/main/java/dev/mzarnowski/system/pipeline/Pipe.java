@@ -1,7 +1,9 @@
 package dev.mzarnowski.system.pipeline;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-public interface Pipe<A> extends Component {
-    Component forEach(Consumer<A> f);
+interface Pipe<A> {
+    Sink forEach(Consumer<A> consumer);
+    <B> Pipe<B> map(Function<A, B> f);
 }
