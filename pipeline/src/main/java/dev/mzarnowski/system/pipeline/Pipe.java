@@ -10,6 +10,7 @@ public interface Pipe<A> extends Component {
     Pipe<A> filter(Predicate<A> predicate);
 
     <B> Pipe<B> adapt(Function<Flow<A, A>, Flow<A, B>> f);
+    Component consume(Function<Flow<A, A>, Flow.Terminal<A>> f);
 
     Pipe<A> onComplete(Runnable task);
 }

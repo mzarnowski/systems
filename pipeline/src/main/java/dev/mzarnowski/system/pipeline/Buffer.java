@@ -39,6 +39,12 @@ abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
         return register(false, (reader) -> new AdaptUsingFlow<>(owner, reader, f.apply(flowSource())));
     }
 
+    @Override
+    public Component consume(Function<Flow<A, A>, Flow.Terminal<A>> f) {
+        return register(false, (reader) -> new SinkToFlow<>(owner, reader, f.apply(flowSource())));
+
+    }
+
     public final void write(int offset, A value) {
         ring.set(at + offset, value);
     }
