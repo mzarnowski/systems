@@ -34,6 +34,11 @@ abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
         return register(false, (reader) -> new AdaptUsingPredicate<>(owner, reader, p));
     }
 
+    @Override
+    public <B> Pipe<B> adapt(Function<Flow<A, A>, Flow<A, B>> f) {
+        return register(false, (reader) -> new AdaptUsingFlow<>(owner, reader, f.apply(flowSource())));
+    }
+
     public final void write(int offset, A value) {
         ring.set(at + offset, value);
     }
@@ -87,5 +92,14 @@ abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
 
     final void unsubscribe(Reader<A> reader) {
         downstream.remove(reader);
+    }
+
+    private Flow<A, A> flowSource() {
+        return new Flow<>() {
+            @Override
+            FlowStaged<A> build(FlowStaged<A> next) {
+                return next;
+            }
+        };
     }
 }

@@ -6,7 +6,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-abstract class Pump extends Component implements Disposable {
+abstract class Pump extends FeedbackComponent implements Disposable {
     private static final int IDLE = 0;
     private static final int RUNNING = 1;
     private static final int QUEUED = 2;

@@ -2,7 +2,7 @@ package dev.mzarnowski.system.pipeline;
 
 import dev.mzarnowski.Disposable;
 
-abstract class Sink extends Pump implements Disposable, Downstream {
+abstract class Sink extends Pump implements Disposable, Downstream, Component {
     protected final Reader<?> upstream;
 
     <A> Sink(Pipeline owner, Reader<A> upstream) {
@@ -24,7 +24,7 @@ abstract class Sink extends Pump implements Disposable, Downstream {
     }
 
     @Override
-    public Sink onComplete(Runnable task) {
+    public Component onComplete(Runnable task) {
         onComplete.add(task);
         return this;
     }

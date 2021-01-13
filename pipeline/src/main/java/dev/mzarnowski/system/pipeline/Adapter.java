@@ -45,7 +45,7 @@ abstract class Adapter<A, B> extends Buffer<B> implements Disposable, Upstream, 
     }
 
     @Override
-    public Buffer<B> onComplete(Runnable task) {
+    public Pipe<B> onComplete(Runnable task) {
         onComplete.add(task);
         return this;
     }
