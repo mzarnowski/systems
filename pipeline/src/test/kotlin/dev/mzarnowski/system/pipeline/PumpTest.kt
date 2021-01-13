@@ -2,12 +2,11 @@ package dev.mzarnowski.system.pipeline
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.util.concurrent.Executors
 
 class PumpTest {
     @Test
     fun read_all_values() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
 
         val pipeline = Pipeline(scheduler, 32, 20)
         val pump = pipeline.stream(1..10000)
@@ -23,7 +22,7 @@ class PumpTest {
 
     @Test
     fun map_all_values() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
 
         val pipeline = Pipeline(scheduler, 32, 20)
         val pump = pipeline.stream(1..1000).map { it + 3 }
@@ -39,7 +38,7 @@ class PumpTest {
 
     @Test
     fun filter_odd_values() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
         val predicate = { i: Int -> i and 1 == 0 }
         val pipeline = Pipeline(scheduler, 32, 20)
         val pump = pipeline.stream(1..1000).filter(predicate)
@@ -55,7 +54,7 @@ class PumpTest {
 
     @Test
     fun adapt_using_flow() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
 
         val pipeline = Pipeline(scheduler, 32, 7)
         val pump = pipeline.stream(1..1000).adapt { it.map { n -> n * 4 }.filter { n -> n % 10 == 0 } }
@@ -72,7 +71,7 @@ class PumpTest {
 
     @Test
     fun consume_using_flow() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
 
         val pipeline = Pipeline(scheduler, 32, 7)
         val pump = pipeline.stream(1..1000)
@@ -90,7 +89,7 @@ class PumpTest {
 
     @Test
     fun transfer_data_through_long_chain() {
-        val scheduler = Scheduler(singleThreaded(), 1)
+        val scheduler = Scheduler(threads = 1, 1)
         val length = 100
 
         val pipeline = Pipeline(scheduler, 32, 7)
@@ -107,8 +106,6 @@ class PumpTest {
             assertThat(actual.last()).isEqualTo(1000 + length)
         }
     }
-
-    private fun singleThreaded() = Executors.newSingleThreadScheduledExecutor { Thread(it, "foo") }
 }
 
 
