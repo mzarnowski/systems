@@ -29,6 +29,12 @@ abstract class Sink<A> extends Pump implements Disposable, Downstream, Component
         return this;
     }
 
+    @Override
+    public Component onError(ErrorHandler handler) {
+        onError.add(handler);
+        return this;
+    }
+
     protected void pump() {
         var available = upstream.claim(1, batchSize);
         move(available);

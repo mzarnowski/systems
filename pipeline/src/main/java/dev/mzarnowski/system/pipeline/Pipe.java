@@ -13,4 +13,5 @@ public interface Pipe<A> extends Component {
     Component consume(Function<Flow<A, A>, Flow.Terminal<A>> f);
 
     Pipe<A> onComplete(Runnable task);
+    Pipe<A> onError(ErrorHandler handler);
 }

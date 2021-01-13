@@ -51,13 +51,21 @@ abstract class Pump extends FeedbackComponent implements Disposable {
         if (was == COMPLETED) {
             onComplete.run();
         } else if (was == COMPLETING) {
-            drain();
+            call(this::drain);
             executor.execute(this::iterate);
         } else {
-            pump();
+            call(this::pump);
             var is = state.updateAndGet(it -> it < COMPLETING ? it - 1 : it);
             if (is == IDLE) return;
             executor.execute(this::iterate);
+        }
+    }
+
+    private void call(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Throwable e) {
+            onError.forEach(handler -> handler.accept(this, e));
         }
     }
 }

@@ -7,7 +7,7 @@ abstract class Source<A> extends Buffer<A> implements Disposable, Upstream {
         super(owner);
     }
 
-     protected abstract void move(int amount);
+    protected abstract void move(int amount);
 
     @Override
     public void request() {
@@ -27,6 +27,12 @@ abstract class Source<A> extends Buffer<A> implements Disposable, Upstream {
     @Override
     public Source<A> onComplete(Runnable task) {
         onComplete.add(task);
+        return this;
+    }
+
+    @Override
+    public Pipe<A> onError(ErrorHandler handler) {
+        onError.add(handler);
         return this;
     }
 }

@@ -49,4 +49,10 @@ abstract class Adapter<A, B> extends Buffer<B> implements Disposable, Upstream, 
         onComplete.add(task);
         return this;
     }
+
+    @Override
+    public Pipe<B> onError(ErrorHandler handler) {
+        onError.add(handler);
+        return this;
+    }
 }

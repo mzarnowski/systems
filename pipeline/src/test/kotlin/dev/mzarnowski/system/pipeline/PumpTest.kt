@@ -2,6 +2,7 @@ package dev.mzarnowski.system.pipeline
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicInteger
 
 class PumpTest {
     @Test
@@ -84,6 +85,21 @@ class PumpTest {
             assertThat(actual.size).isEqualTo(200)
             assertThat(actual.first()).isEqualTo(20)
             assertThat(actual.last()).isEqualTo(1000 * 4)
+        }
+    }
+
+    @Test
+    fun downstream_completes_after_upstream_gets_disposed() {
+        val scheduler = Scheduler(threads = 1, 1)
+
+        val pipeline = Pipeline(scheduler, 32, 7)
+        val pump = pipeline.stream(1..1000).map { throw Exception() }.onError { d, _ -> d.dispose() }
+
+        val counter = AtomicInteger()
+        pump.forEach { counter.incrementAndGet() }.onComplete(scheduler::countDown)
+
+        scheduler.onceCompleted {
+            assertThat(counter.get()).isZero
         }
     }
 
