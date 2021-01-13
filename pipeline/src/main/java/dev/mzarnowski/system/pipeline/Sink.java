@@ -2,10 +2,10 @@ package dev.mzarnowski.system.pipeline;
 
 import dev.mzarnowski.Disposable;
 
-abstract class Sink extends Pump implements Disposable, Downstream, Component {
-    protected final Reader<?> upstream;
+abstract class Sink<A> extends Pump implements Disposable, Downstream, Component {
+    protected final Reader<A> upstream;
 
-    <A> Sink(Pipeline owner, Reader<A> upstream) {
+    Sink(Pipeline owner, Reader<A> upstream) {
         super(owner);
         this.upstream = upstream;
         onComplete(upstream::dispose);

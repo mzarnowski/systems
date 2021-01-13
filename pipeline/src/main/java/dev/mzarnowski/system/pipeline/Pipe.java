@@ -5,7 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface Pipe<A> extends Component {
-    Sink forEach(Consumer<A> consumer);
+    Component forEach(Consumer<A> consumer);
     <B> Pipe<B> map(Function<A, B> f);
     Pipe<A> filter(Predicate<A> predicate);
 

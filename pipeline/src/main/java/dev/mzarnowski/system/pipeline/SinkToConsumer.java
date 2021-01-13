@@ -2,13 +2,11 @@ package dev.mzarnowski.system.pipeline;
 
 import java.util.function.Consumer;
 
-final class SinkToConsumer<A> extends Sink {
-    private final Reader<A> upstream;
+final class SinkToConsumer<A> extends Sink<A> {
     private final Consumer<A> consumer;
 
     SinkToConsumer(Pipeline owner, Reader<A> upstream, Consumer<A> consumer) {
         super(owner, upstream);
-        this.upstream = upstream;
         this.consumer = consumer;
         schedule();
     }

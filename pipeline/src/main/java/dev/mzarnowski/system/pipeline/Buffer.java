@@ -20,7 +20,7 @@ abstract class Buffer<A> extends Pump implements Claimable, Upstream, Pipe<A> {
         onComplete.add(() -> downstream.values().forEach(Downstream::onComplete));
     }
 
-    public final Sink forEach(Consumer<A> consumer) {
+    public final Component forEach(Consumer<A> consumer) {
         return register(true, (reader) -> new SinkToConsumer<>(owner, reader, consumer));
     }
 
